@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script src="https://simplewebrtc.com/latest-v2.js"></script>
+    <script type="text/javascript">
+    </script>
+    <style>
+        .videoContainer {
+            position: relative;
+            width: 200px;
+            height: 150px;
+        }
+        .videoContainer video {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <meta charset="UTF-8">
+    <title>Video Tracker</title>
+</head>
+<body>
+<h2>Peer to Peer Video Chat</h2>
+<form id="createRoom">
+    <input id="sessionInput">
+    <button type="submit">Create room!</button>
+</form>
+<div>
+    <button id="screenShareButton">share screen</button>
+    <!--(https required for screensharing to work)-->
+</div>
+<div class="videoContainer">
+    <video id="localVideo" oncontextmenu="return false;" autoplay=""></video>
+    <meter id="localVolume" class="volume" min="-45" max="-20" high="-25" low="-40" value="-45" style="display: inline-block;"></meter>
+</div>
+<div id="remotes"></div>
+<script>
+    // grab the room from the URL
+    var room = location.search && location.search.split('?')[1];
+    //webrtc connection
+    var webrtc = new SimpleWebRTC({
+        localVideoEl: 'localVideo',
+        remoteVideosEl: '', // empty string
+        autoRequestMedia: true
+//        debug: false,
+//        detectSpeakingEvents: true,
+//        autoAdjustMic: true,
+//        media: { audio: true, video: true }
+    });
+    // a peer video has been added
+    webrtc.on('videoAdded', function (video, peer) {
+        console.log('video added', peer);
+        var remotes = document.getElementById('remotes');
+        if (remotes) {
+            var container = document.createElement('div');
+            container.className = 'videoContainer';
+            container.id = 'container_' + webrtc.getDomId(peer);
+            container.appendChild(video);
+
+            // suppress contextmenu
+            video.oncontextmenu = function () { return false; };
+
+            remotes.appendChild(container);
+        }
+    });
+    // a peer video was removed
+    webrtc.on('videoRemoved', function (video, peer) {
+        console.log('video removed ', peer);
+        var remotes = document.getElementById('remotes');
+        var el = document.getElementById(peer ? 'container_' + webrtc.getDomId(peer) : 'localScreenContainer');
+        if (remotes && el) {
+            remotes.removeChild(el);
+        }
+    });
+</script>
+</body>
+</html>
